@@ -3,44 +3,55 @@ package wallet
 import (
 	"fmt"
 	"testing"
-
-	
 )
 
-func TestService_FindAccountById_success(t *testing.T) {
+func TestService_FindAccountByID_success(t *testing.T) {
 	
+	svc := &Service{}
+	account, err := svc.RegisterAccount("+992900708090")
+	if err != nil {
+	fmt.Println(err)
+	return
+	}	
 
-	svc := &Service{
-	}
-
-	
-	account, err := svc.FindAccountById(1)
+	accountID, err := svc.FindAccountById(1)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	if account.ID == 0 && err != nil  {
-		t.Errorf("result wrong")
-	}
 	
+	if account.ID != accountID.ID {
+		t.Errorf("invalid result, expected: %v, actual: %v",account.ID,accountID.ID)
+	}
+
+	//expected := types.Account{1,"+992900708090",0}
+	/*
+	if !reflect.DeepEqual(account,accountID) {
+		t.Errorf("invalid result, expected: %v, actual: %v",account,accountID)
+	   }*/
 }
 
 func TestService_FindAccountById_notFound(t *testing.T) {
 	
 
-	svc := &Service{
+	svc := &Service{}
+	account, err := svc.RegisterAccount("+992900708090")
+	if err != nil {
+	fmt.Println(err)
+	return
 	}
 
+	
 
-	account, err := svc.FindAccountById(1)
+	accountID, err := svc.FindAccountById(1)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	if account.ID == 0 && err != nil  {
-		t.Errorf("result wrong")
+	if accountID.ID != account.ID{
+		 fmt.Println(ErrAccountNotFound)
 	}
 	
 }

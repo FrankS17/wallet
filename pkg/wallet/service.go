@@ -7,7 +7,7 @@ import (
 )
 
 type Service struct {
-	nextAccountId int64
+	nextAccountID int64
 	accounts      []*types.Account
 	payments 	  []*types.Payment
 }
@@ -31,13 +31,34 @@ var ErrAccountNotFound= errors.New("account not found")
 
 
 
+func (s *Service) RegisterAccount(phone types.Phone) (*types.Account, error){
+	for _, account := range s.accounts {
+	if account.Phone == phone {
+		return nil, ErrPhoneRegistered
+	}
+}
+	s.nextAccountID++
+	account := &types.Account{
+		ID: 		s.nextAccountID,
+		Phone:		phone,
+		Balance: 	0,
+	}
+	s.accounts = append(s.accounts,account)
+
+	return account, nil
+}
+
+
+
 func (s *Service) FindAccountById(accountID int64) (*types.Account,error) {
 	//var s *Service 
-
-	for _, account := range s.accounts {
-		if account.ID == accountID {
-			return account, nil
+	var account *types.Account
+	
+	for _, account = range s.accounts {
+		if account.ID != accountID {
+			return nil, ErrAccountNotFound
 		}
 	}
-	return nil, ErrAccountNotFound
+
+	return account, nil
 }

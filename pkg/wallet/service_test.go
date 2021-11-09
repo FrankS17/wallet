@@ -14,7 +14,7 @@ func TestService_FindAccountByID_success(t *testing.T) {
 	return
 	}	
 
-	accountID, err := svc.FindAccountById(1)
+	accountID, err := svc.FindAccountByID(1)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -44,7 +44,7 @@ func TestService_FindAccountById_notFound(t *testing.T) {
 
 	
 
-	accountID, err := svc.FindAccountById(1)
+	accountID, err := svc.FindAccountByID(1)
 	if err != nil {
 		fmt.Println(err)
 		return

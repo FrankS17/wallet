@@ -50,7 +50,7 @@ func (s *Service) RegisterAccount(phone types.Phone) (*types.Account, error){
 
 
 
-func (s *Service) FindAccountById(accountID int64) (*types.Account,error) {
+func (s *Service) FindAccountByID(accountID int64) (*types.Account,error) {
 	//var s *Service 
 	var account *types.Account
 	

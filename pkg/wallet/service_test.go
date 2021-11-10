@@ -1,103 +1,130 @@
 package wallet
 
 import (
-	"fmt"
+	"reflect"
 	"testing"
+
+	"github.com/FrankS17/wallet/pkg/types"
+	"github.com/google/uuid"
 )
 
-func TestService_FindAccountByID_success(t *testing.T) {
-	
-	svc := &Service{}
-	account, err := svc.RegisterAccount("+992900708090")
+func TestService_FindPaymentID_success(t *testing.T) {
+	//создаем сервис
+	s := newTestService()
+	_, payments, err := s.addAccount(defaultTestAccount)
 	if err != nil {
-	fmt.Println(err)
-	return
-	}	
-
-	accountID, err := svc.FindAccountByID(1)
-	if err != nil {
-		fmt.Println(err)
+		t.Error(err)
 		return
 	}
 
-	
-	if account.ID != accountID.ID {
-		t.Errorf("invalid result, expected: %v, actual: %v",account.ID,accountID.ID)
+	// попробуем найти платеж
+	payment := payments[0]
+	got, err := s.FindPaymentByID(payment.ID)
+	if err != nil {
+		t.Errorf("FindPaymentID(): error = %v", err)
+		return
+	}
+
+	//сравниваем платежи
+	if !reflect.DeepEqual(payment, got)  {
+		t.Errorf("FindPaymentID(): wrong payment was returned = %v", err)
+		return
 	}
 }
 
-func TestService_FindAccountById_notFound(t *testing.T) {
-	
-
-	svc := &Service{}
-	account, err := svc.RegisterAccount("+992900708090")
+func TestService_FindPaymentID_fail(t *testing.T) {
+	//создаем сервис
+	s := newTestService()
+	_, _, err := s.addAccount(defaultTestAccount)
 	if err != nil {
-	fmt.Println(err)
-	return
-	}
-
-	
-
-	accountID, err := svc.FindAccountByID(1)
-	if err != nil {
-		fmt.Println(err)
+		t.Error(err)
 		return
 	}
 
-	if accountID.ID != account.ID{
-		 fmt.Println(ErrAccountNotFound)
+	// попробуем найти платеж
+	_, err = s.FindPaymentByID(uuid.New().String())
+	if err == nil {
+		t.Errorf("FindPaymentID(): error = %v", err)
+		return
 	}
-	
+
+	//сравниваем платежи
+	if err != ErrPaymentNotFound {
+		t.Errorf("FindPaymentID(): must return ErrPaymentNotFound, returned= %v", err)
+		return
+	}	
 }
 
 func TestService_Reject_success(t *testing.T) {
-	svc := &Service{}
-	payment, err := svc.Pay(1,10,"auto")
-	
+	//создаем сервис
+	s := newTestService()
+	_, payments, err := s.addAccount(defaultTestAccount)
 	if err != nil {
-		fmt.Println(err)
-		return
-	} 
-
-	FindPayment, err := svc.FindPaymentByID(payment.ID)
-	if err != nil {
-		fmt.Println(err)
+		t.Error(err)
 		return
 	}
 
-	if payment != FindPayment {
-		fmt.Println(ErrAccountNotFound)
-	}
-
-	err = svc.Reject(FindPayment.ID)
+	// попробуем найти платеж
+	payment := payments[0]
+	err = s.Reject(payment.ID)
 	if err != nil {
-		fmt.Println("Wrong!")
+		t.Errorf("Reject(): error = %v", err)
+		return
 	}
 
+	savedPayment, err := s.FindPaymentByID(payment.ID)
+	if err != nil {
+		t.Errorf("Reject(): can't find payment by id, error = %v", err)
+		return
+	}
+	if savedPayment.Status != types.PaymentStatusFail {
+		t.Errorf("Reject(): status didn't change, error = %v", savedPayment)
+		return
+	}
+
+	savedAccount, err := s.FindAccountByID(payment.AccountID)
+	if err != nil {
+		t.Errorf("Reject(): can't find account by id, error = %v", err)
+		return
+	}
+	if savedAccount.Balance != defaultTestAccount.balance {
+		t.Errorf("Reject(): balance didn't change, error = %v", savedAccount)
+		return
+	}
 }
 
-func TestService_Reject_notFound(t *testing.T) {
-	svc := &Service{}
-	payment, err := svc.Pay(1,10,"auto")
+func TestService_Repeat_success(t *testing.T) {
+	//создаем сервис
+	s := newTestService()
+	_, payments, err := s.addAccount(defaultTestAccount)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	// попробуем найти платеж
+	payment := payments[0]
+	repeatPayment,err := s.Repeat(payment.ID)
+	if err != nil {
+		t.Errorf("Repeat(): error = %v", err)
+		return
+	}
 	
+	savedPayment, err := s.FindPaymentByID(payment.ID)
 	if err != nil {
-		fmt.Println(err)
+		t.Errorf("Repeat(): can't find payment by id, error = %v", err)
 		return
-	} 
+	}
+	
 
-	FindPayment, err := svc.FindPaymentByID(payment.ID)
-	if err != nil {
-		fmt.Println(err)
+	if !reflect.DeepEqual(savedPayment,repeatPayment){
+		t.Errorf("newPayment(): error = %v", err)
 		return
 	}
 
-	if payment != FindPayment {
-		fmt.Println(ErrAccountNotFound)
-	}
-
-	err = svc.Reject(FindPayment.ID)
-	if err != nil {
-		fmt.Println("Wrong!")
+	if savedPayment.ID != repeatPayment.ID {
+		t.Errorf("Repeat: payments are equal! error = %v", err)
+		return	
 	}
 
 }

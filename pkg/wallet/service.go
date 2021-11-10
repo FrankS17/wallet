@@ -44,25 +44,11 @@ type Service struct {
 	payments 	  []*types.Payment
 }
 
-
-func New(text string) error {
-	return &errorString{text}
-}
-
-type errorString struct {  			// сам тип ошибки не экспортируется
-	s string
-}
-
-func (e *errorString) Error() string { 		// но зато эекспортируется функция, которая создает ошибки этого типа
-	return e.s
-}
-
 var ErrPhoneRegistered = errors.New("phone already registered")
 var ErrAmountMustBePositive = errors.New("amount must be positive")
 var ErrAccountNotFound = errors.New("account not found")
 var ErrNotEnoughBalance = errors.New("not enough balance")
 var ErrPaymentNotFound = errors.New("payment not found")
-
 
 
 
@@ -84,7 +70,7 @@ func (s *Service) RegisterAccount(phone types.Phone) (*types.Account, error){
 }
 
 
-func (s *Service) Deposit(accountID int64, amount types.Money) error {
+func (s *testService) Deposit(accountID int64, amount types.Money) error {
 	if amount <=0 {
 		return ErrAmountMustBePositive
 	}
@@ -106,7 +92,7 @@ func (s *Service) Deposit(accountID int64, amount types.Money) error {
 	return nil
 }
 
-func (s *Service) FindAccountByID(accountID int64) (*types.Account,error) {
+func (s *testService) FindAccountByID(accountID int64) (*types.Account,error) {
 	//var s *Service 
 	var account *types.Account
 	
@@ -120,7 +106,7 @@ func (s *Service) FindAccountByID(accountID int64) (*types.Account,error) {
 }
 
 
-func (s *Service) Pay(accountID int64, amount types.Money, category types.PaymentCategory)(*types.Payment, error) {
+func (s *testService) Pay(accountID int64, amount types.Money, category types.PaymentCategory)(*types.Payment, error) {
 	if amount <= 0 {
 		return nil, ErrAmountMustBePositive
 	}
@@ -151,7 +137,7 @@ func (s *Service) Pay(accountID int64, amount types.Money, category types.Paymen
 }
 
 
-func (s *Service) FindPaymentByID(paymentID string) (*types.Payment, error) {
+func (s *testService) FindPaymentByID(paymentID string) (*types.Payment, error) {
 	var payment *types.Payment
 	
 	for _, payment = range s.payments {
@@ -162,7 +148,7 @@ func (s *Service) FindPaymentByID(paymentID string) (*types.Payment, error) {
 	return payment, nil
 }
 
-func (s *Service) Reject(paymentID string) error {
+func (s *testService) Reject(paymentID string) error {
 	
 	payment, err := s.FindPaymentByID(paymentID)
 	if err != nil {
@@ -227,12 +213,7 @@ func (s *testService) Repeat(paymentID string) (*types.Payment, error) {
 		account = acc
 		break
 	}
-	if account == nil {
-		return nil, ErrAccountNotFound
-	}
-	if account.Balance < payment.Amount {
-		return nil, ErrNotEnoughBalance
-	}
+
 
 	account.Balance -= payment.Amount
 	payment.ID = uuid.New().String()

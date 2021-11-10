@@ -91,7 +91,8 @@ func TestService_Reject_success(t *testing.T) {
 		t.Errorf("Reject(): balance didn't change, error = %v", savedAccount)
 		return
 	}
-}
+} 
+
 
 func TestService_Repeat_success(t *testing.T) {
 	//создаем сервис

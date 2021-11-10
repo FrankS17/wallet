@@ -53,6 +53,27 @@ func (s *Service) RegisterAccount(phone types.Phone) (*types.Account, error){
 }
 
 
+func (s *Service) Deposit(accountID int64, amount types.Money) error {
+	if amount <=0 {
+		return ErrAmountMustBePositive
+	}
+
+	var account *types.Account
+	for _, acc := range s.accounts {
+		if acc.ID == accountID {
+			account = acc
+			break
+		}
+	}
+	
+	if account == nil {
+		return ErrAccountNotFound
+	}
+	
+	// зачисление средств пока не рассматриваем как платеж
+	account.Balance += amount
+	return nil
+}
 
 func (s *Service) FindAccountByID(accountID int64) (*types.Account,error) {
 	//var s *Service 
@@ -66,6 +87,7 @@ func (s *Service) FindAccountByID(accountID int64) (*types.Account,error) {
 
 	return account, nil
 }
+
 
 func (s *Service) Pay(accountID int64, amount types.Money, category types.PaymentCategory)(*types.Payment, error) {
 	if amount <= 0 {

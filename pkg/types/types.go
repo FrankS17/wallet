@@ -10,8 +10,15 @@ type PaymentCategory string
 
 type PaymentStatus string
 
+const (
+	PaymentStatusOk PaymentStatus = "Ok"
+	PaymentStatusFail PaymentStatus = "FAIL"
+	PaymentStatusInProgress PaymentStatus = "INPROGRESS"
+)
+
 type Payment struct {
-	ID int 
+	ID string 
+	AccountID int64
 	Amount Money
 	Category PaymentCategory
 	Status PaymentStatus

@@ -132,8 +132,6 @@ func (s *Service) FindPaymentByID(paymentID string) (*types.Payment, error) {
 }
 
 func (s *Service) Reject(paymentID string) error {
-
-	var amount types.Money
 	
 	payment, err := s.FindPaymentByID(paymentID)
 	if err != nil {
@@ -146,7 +144,7 @@ func (s *Service) Reject(paymentID string) error {
 		if payment.AccountID != acc.ID {
 			return ErrAccountNotFound
 		}
-		acc.Balance += amount
+		acc.Balance += payment.Amount
 	}
 	return nil
 }

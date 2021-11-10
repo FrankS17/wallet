@@ -138,13 +138,13 @@ func (s *Service) Reject(paymentID string) error {
 		return ErrPaymentNotFound
 	}
 	
-	payment.Status = types.PaymentStatusFail
-	
-	for _, acc := range s.accounts {
-		if payment.AccountID != acc.ID {
-			return ErrAccountNotFound
-		}
-		acc.Balance += payment.Amount
+	account, err := s.FindAccountByID(payment.AccountID)
+	if err != nil {
+		return ErrAccountNotFound
 	}
+
+	payment.Status = types.PaymentStatusFail
+	account.Balance += payment.Amount
+		
 	return nil
 }

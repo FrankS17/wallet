@@ -162,7 +162,6 @@ func (s *Service) Repeat(paymentID string) (*types.Payment, error) {
 	if account.Balance < payment.Amount {
 		return nil, ErrNotEnoughBalance
 	}
-	
 	account.Balance -= payment.Amount
 	aaa := uuid.New().String()
 	newP := &types.Payment{

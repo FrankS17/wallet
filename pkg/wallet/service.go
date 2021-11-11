@@ -2,40 +2,21 @@ package wallet
 
 import (
 	"errors"
-	"fmt"
-
 	"github.com/FrankS17/wallet/pkg/types"
 	"github.com/google/uuid"
 )
 
 
-type testService struct {
-	*Service		// embedding(встраивание)
+func New(text string) error {
+	return &errorString{text}
 }
 
-func newTestService() *testService {
-	return &testService{Service: &Service{}} // функция конструктор
+type errorString struct {  			// сам тип ошибки не экспортируется
+	s string
 }
 
-type testAccount struct {
-	phone    types.Phone
-	balance  types.Money
-	payments []struct {
-		amount   types.Money
-		category types.PaymentCategory
-	}
-}
-
-
-var defaultTestAccount = testAccount { 
-	phone:		"+992900100500",
-	balance: 	10_000_00,
-	payments:	[]struct {
-		amount		types.Money
-		category	types.PaymentCategory	
-	} {
-		{amount: 1_000_00, category: "auto"},
-	},
+func (e *errorString) Error() string { 		// но зато эекспортируется функция, которая создает ошибки этого типа
+	return e.s
 }
 
 type Service struct {
@@ -70,7 +51,7 @@ func (s *Service) RegisterAccount(phone types.Phone) (*types.Account, error){
 }
 
 
-func (s *testService) Deposit(accountID int64, amount types.Money) error {
+func (s *Service) Deposit(accountID int64, amount types.Money) error {
 	if amount <=0 {
 		return ErrAmountMustBePositive
 	}
@@ -92,7 +73,7 @@ func (s *testService) Deposit(accountID int64, amount types.Money) error {
 	return nil
 }
 
-func (s *testService) FindAccountByID(accountID int64) (*types.Account,error) {
+func (s *Service) FindAccountByID(accountID int64) (*types.Account,error) {
 	//var s *Service 
 	var account *types.Account
 	
@@ -106,7 +87,7 @@ func (s *testService) FindAccountByID(accountID int64) (*types.Account,error) {
 }
 
 
-func (s *testService) Pay(accountID int64, amount types.Money, category types.PaymentCategory)(*types.Payment, error) {
+func (s *Service) Pay(accountID int64, amount types.Money, category types.PaymentCategory)(*types.Payment, error) {
 	if amount <= 0 {
 		return nil, ErrAmountMustBePositive
 	}
@@ -137,7 +118,7 @@ func (s *testService) Pay(accountID int64, amount types.Money, category types.Pa
 }
 
 
-func (s *testService) FindPaymentByID(paymentID string) (*types.Payment, error) {
+func (s *Service) FindPaymentByID(paymentID string) (*types.Payment, error) {
 	var payment *types.Payment
 	
 	for _, payment = range s.payments {
@@ -148,7 +129,7 @@ func (s *testService) FindPaymentByID(paymentID string) (*types.Payment, error) 
 	return payment, nil
 }
 
-func (s *testService) Reject(paymentID string) error {
+func (s *Service) Reject(paymentID string) error {
 	
 	payment, err := s.FindPaymentByID(paymentID)
 	if err != nil {
@@ -166,46 +147,11 @@ func (s *testService) Reject(paymentID string) error {
 	return nil
 }
 
-
-
-func (s *testService) addAccount(data testAccount) (*types.Account, []*types.Payment, error) {
-	//региструем пользователя
-	account, err := s.RegisterAccount(data.phone)
-	if err != nil {
-		return nil, nil, fmt.Errorf("can't register account, error = %v", err)
-	}
-	
-	// пополняем счет
-	err = s.Deposit(account.ID, data.balance)
-	if err != nil {
-		return nil, nil, fmt.Errorf("can't deposit account, error = %v", err)
-	}
-
-	// выполняем платежи
-	// можем создать слайс сразу нужной длины, поскольку знаем размер
-	payments := make([]*types.Payment, len(data.payments))
-	
-	for i, payment := range data.payments {
-	// тогда здесь работаем через индекс, а не через append
-	payments[i], err = s.Pay(account.ID, payment.amount, payment.category)
-	}
-	if err != nil {
-		return nil, nil, fmt.Errorf("can't make payment, error = %v", err)
-	}
-	
-	return account, payments, nil
-}
-
-
-func (s *testService) Repeat(paymentID string) (*types.Payment, error) {
+func (s *Service) Repeat(paymentID string) (*types.Payment, error) {
 
 	payment, err := s.FindPaymentByID(paymentID)
 	if err != nil {
 		return nil, ErrPaymentNotFound
-	}
-
-	if payment.Amount <= 0 {
-		return nil, ErrAmountMustBePositive
 	}
 
 	var account *types.Account
@@ -214,9 +160,9 @@ func (s *testService) Repeat(paymentID string) (*types.Payment, error) {
 		break
 	}
 
-
 	account.Balance -= payment.Amount
-	payment.ID = uuid.New().String()
+	newA := uuid.New().String()
+	payment.ID = newA
 	s.payments = append(s.payments, payment)
 
 	return payment, nil

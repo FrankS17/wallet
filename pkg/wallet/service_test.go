@@ -163,25 +163,28 @@ func TestService_Repeat_success(t *testing.T) {
 
 	// попробуем найти платеж
 	payment := payments[0]
-	repeatPayment,err := s.Repeat(payment.ID)
-	if err != nil {
-		t.Errorf("Repeat(): error = %v", err)
-		return
-	}
-	
+		
 	savedPayment, err := s.FindPaymentByID(payment.ID)
 	if err != nil {
 		t.Errorf("Repeat(): can't find payment by id, error = %v", err)
 		return
 	}
+
+	repeatPayment,err := s.Repeat(savedPayment.ID)
+	if err != nil {
+		t.Errorf("Repeat(): error = %v", err)
+		return
+	}
 	
 
-	if !reflect.DeepEqual(savedPayment,repeatPayment){
-		t.Errorf("newPayment(): error = %v", err)
+	_, err = s.FindAccountByID(payment.AccountID)
+	if err != nil {
+		t.Errorf("Repeat(): can't find account by id, error = %v", err)
 		return
 	}
 
-	if savedPayment.ID != repeatPayment.ID {
+
+	if savedPayment.ID == repeatPayment.ID {
 		t.Errorf("Repeat: payments are equal! error = %v", err)
 		return	
 	}

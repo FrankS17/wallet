@@ -2,6 +2,7 @@ package wallet
 
 import (
 	"errors"
+
 	"github.com/FrankS17/wallet/pkg/types"
 	"github.com/google/uuid"
 )
@@ -30,7 +31,6 @@ var ErrAmountMustBePositive = errors.New("amount must be positive")
 var ErrAccountNotFound = errors.New("account not found")
 var ErrNotEnoughBalance = errors.New("not enough balance")
 var ErrPaymentNotFound = errors.New("payment not found")
-
 
 
 func (s *Service) RegisterAccount(phone types.Phone) (*types.Account, error){
@@ -119,15 +119,15 @@ func (s *Service) Pay(accountID int64, amount types.Money, category types.Paymen
 
 
 func (s *Service) FindPaymentByID(paymentID string) (*types.Payment, error) {
-	var payment *types.Payment
 	
-	for _, payment = range s.payments {
-		if payment.ID != paymentID {
-			return nil, ErrPaymentNotFound
+	for _, payment := range s.payments {
+		if payment.ID == paymentID {
+			return payment, nil
 		}
 	}
-	return payment, nil
+	return nil, ErrPaymentNotFound
 }
+
 
 func (s *Service) Reject(paymentID string) error {
 	
@@ -154,16 +154,24 @@ func (s *Service) Repeat(paymentID string) (*types.Payment, error) {
 		return nil, ErrPaymentNotFound
 	}
 
-	var account *types.Account
-	for _, acc := range s.accounts {
-		account = acc
-		break
+	account, err := s.FindAccountByID(payment.AccountID)
+	if err != nil {
+		return nil, ErrPaymentNotFound
 	}
-
+	
+	if account.Balance < payment.Amount {
+		return nil, ErrNotEnoughBalance
+	}
+	
 	account.Balance -= payment.Amount
-	newA := uuid.New().String()
-	payment.ID = newA
-	s.payments = append(s.payments, payment)
-
-	return payment, nil
+	aaa := uuid.New().String()
+	newP := &types.Payment{
+		ID: aaa,
+		AccountID: payment.AccountID,
+		Amount: payment.Amount,
+		Category: payment.Category,
+		Status: types.PaymentStatusInProgress,
+	}
+	s.payments = append(s.payments, newP)
+	return newP, nil
 }

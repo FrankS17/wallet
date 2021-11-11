@@ -2,6 +2,7 @@ package wallet
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/FrankS17/wallet/pkg/types"
 	"github.com/google/uuid"
@@ -16,7 +17,7 @@ type errorString struct {  			// сам тип ошибки не экспорт�
 	s string
 }
 
-func (e *errorString) Error() string { 		// но зато эекспортируется функция, которая создает ошибки этого типа
+func (e *errorString) Error() string { 		
 	return e.s
 }
 
@@ -24,6 +25,7 @@ type Service struct {
 	nextAccountID int64
 	accounts      []*types.Account
 	payments 	  []*types.Payment
+	favorites	  []*types.Favorite
 }
 
 var ErrPhoneRegistered = errors.New("phone already registered")
@@ -31,6 +33,7 @@ var ErrAmountMustBePositive = errors.New("amount must be positive")
 var ErrAccountNotFound = errors.New("account not found")
 var ErrNotEnoughBalance = errors.New("not enough balance")
 var ErrPaymentNotFound = errors.New("payment not found")
+var ErrFavoriteNotFound = errors.New("favorite not found")
 
 
 func (s *Service) RegisterAccount(phone types.Phone) (*types.Account, error){
@@ -173,4 +176,72 @@ func (s *Service) Repeat(paymentID string) (*types.Payment, error) {
 	}
 	s.payments = append(s.payments, newP)
 	return newP, nil
+}
+
+func (s *Service) FavoritePayment(paymentID, name string) (*types.Favorite, error) {
+	payment, err := s.FindPaymentByID(paymentID)
+	if err != nil {
+		return nil, ErrPaymentNotFound
+	}
+
+	favoritePayment := &types.Favorite{
+		ID: payment.ID,
+		AccountID: payment.AccountID,
+		Amount: payment.Amount,
+		Category: payment.Category,
+		Name: name,
+	}
+
+	s.favorites = append(s.favorites, favoritePayment)
+	return favoritePayment, nil
+}
+
+func (s *Service) FindFavoriteByID(favoriteID string) (*types.Favorite, error) {
+	
+	for _, favorite := range s.favorites {
+		if favorite.ID == favoriteID {
+			return favorite, nil
+		}
+	}
+	return nil, ErrFavoriteNotFound
+}
+
+func (s *Service) PayFromFavorite(favoriteID string) (*types.Payment, error) {
+	
+	favorite, err := s.FindFavoriteByID(favoriteID)
+	if err != nil {
+		return nil, ErrFavoriteNotFound 
+	}
+	
+	account, err := s.FindAccountByID(favorite.AccountID)
+	if err != nil {
+		return nil, ErrAccountNotFound 
+	}
+
+	fmt.Println(favorite)
+
+	account.Balance -= favorite.Amount
+	payment := &types.Payment{
+		ID: uuid.New().String(),
+		AccountID: favorite.AccountID,
+		Amount: favorite.Amount,
+		Category: favorite.Category,
+		Status: types.PaymentStatusInProgress,
+	}	
+
+	s.payments = append(s.payments, payment)
+
+	payment2 := &types.Payment{
+		ID: uuid.New().String(),
+		AccountID: favorite.AccountID,
+		Amount: favorite.Amount,
+		Category: favorite.Category,
+		Status: types.PaymentStatusInProgress,
+	}	
+	fmt.Println(payment2)
+	fmt.Println(payment2)
+	fmt.Println(payment2)
+
+	
+	return payment, nil
 }

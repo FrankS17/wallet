@@ -271,7 +271,7 @@ func TestService_FavoritePayment_success(t *testing.T) {
 	}	
 	
 	// находим этот добавленный платеж в слайсе favorites 
-	findFavoritePayment, err := s.FindFavoriteByID(findPayment.ID)
+	findFavoritePayment, err := s.FindFavoriteByID(addFavPay.ID)
 	if err != nil {
 		t.Errorf("Favorite(): error = %v", err)
 		return
@@ -312,7 +312,7 @@ func TestService_PayFromFavorite_success(t *testing.T) {
 	}	
 	
 	// находим этот добавленный платеж в слайсе favorites 
-	findFavoritePayment, err := s.FindFavoriteByID(findPayment.ID)
+	findFavoritePayment, err := s.FindFavoriteByID(addFavPay.ID)
 	if err != nil {
 		t.Errorf("PayFromFavorite(): error = %v", err)
 		return

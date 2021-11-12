@@ -76,6 +76,7 @@ func (s *Service) Deposit(accountID int64, amount types.Money) error {
 	return nil
 }
 
+
 func (s *Service) FindAccountByID(accountID int64) (*types.Account,error) {
 	//var s *Service 
 	var account *types.Account
@@ -150,6 +151,7 @@ func (s *Service) Reject(paymentID string) error {
 	return nil
 }
 
+
 func (s *Service) Repeat(paymentID string) (*types.Payment, error) {
 
 	payment, err := s.FindPaymentByID(paymentID)
@@ -178,21 +180,23 @@ func (s *Service) Repeat(paymentID string) (*types.Payment, error) {
 	return newP, nil
 }
 
+
 func (s *Service) FavoritePayment(paymentID, name string) (*types.Favorite, error) {
+	
 	payment, err := s.FindPaymentByID(paymentID)
 	if err != nil {
 		return nil, ErrPaymentNotFound
 	}
 
 	favoritePayment := &types.Favorite{
-		ID: payment.ID,
+		ID: uuid.New().String(),
 		AccountID: payment.AccountID,
+		Name: name,
 		Amount: payment.Amount,
 		Category: payment.Category,
-		Name: name,
 	}
 
-	s.favorites = append(s.favorites, favoritePayment)
+	s.favorites = append(s.favorites, favoritePayment)	
 	return favoritePayment, nil
 }
 

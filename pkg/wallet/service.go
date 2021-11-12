@@ -2,8 +2,6 @@ package wallet
 
 import (
 	"errors"
-	"fmt"
-
 	"github.com/FrankS17/wallet/pkg/types"
 	"github.com/google/uuid"
 )
@@ -222,7 +220,6 @@ func (s *Service) PayFromFavorite(favoriteID string) (*types.Payment, error) {
 		return nil, ErrAccountNotFound 
 	}
 
-	fmt.Println(favorite)
 
 	account.Balance -= favorite.Amount
 	payment := &types.Payment{
@@ -233,19 +230,6 @@ func (s *Service) PayFromFavorite(favoriteID string) (*types.Payment, error) {
 		Status: types.PaymentStatusInProgress,
 	}	
 
-	s.payments = append(s.payments, payment)
-
-	payment2 := &types.Payment{
-		ID: uuid.New().String(),
-		AccountID: favorite.AccountID,
-		Amount: favorite.Amount,
-		Category: favorite.Category,
-		Status: types.PaymentStatusInProgress,
-	}	
-	fmt.Println(payment2)
-	fmt.Println(payment2)
-	fmt.Println(payment2)
-
-	
+	s.payments = append(s.payments, payment)	
 	return payment, nil
 }

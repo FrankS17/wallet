@@ -2,6 +2,12 @@ package wallet
 
 import (
 	"errors"
+	"io"
+	"log"
+	"os"
+	"strconv"
+	"strings"
+
 	"github.com/FrankS17/wallet/pkg/types"
 	"github.com/google/uuid"
 )
@@ -32,6 +38,92 @@ var ErrAccountNotFound = errors.New("account not found")
 var ErrNotEnoughBalance = errors.New("not enough balance")
 var ErrPaymentNotFound = errors.New("payment not found")
 var ErrFavoriteNotFound = errors.New("favorite not found")
+
+
+func (s *Service) ExportToFile(path string) error {
+	file, err := os.Create(path)
+	if err != nil {
+		log.Print(err)
+		return err
+	}
+	defer func() {
+		if cerr := file.Close(); cerr != nil {
+			log.Print(cerr)
+		}
+	}()
+
+	data := make([]byte,0)
+	lastString := ""
+	for _, account := range s.accounts {
+		text := []byte(strconv.FormatInt(account.ID,10) + ";" + string(account.Phone) + ";" + strconv.FormatInt(int64(account.Balance),10) + "|")
+		data = append(data,text...)
+		}
+	str := string(data)
+	lastString = strings.TrimSuffix(str,"|")
+		_, err = file.Write([]byte(lastString))
+	if err != nil {
+		log.Print(err)
+		return err
+	}
+	//log.Printf("%v",file)
+	return nil
+}
+
+
+func (s *Service) ImportFromFile(path string) error {
+	
+	file, err := os.Open(path)
+	if err != nil {
+		log.Print(err)
+		return err
+	}
+	defer func() {		
+		if cerr := file.Close(); cerr != nil {
+			log.Print(cerr)
+		}
+	}()
+
+	content := make([]byte, 0)
+	buf := make([]byte, 4)
+
+	for {
+		read, err := file.Read(buf)
+		if err == io.EOF { // файл закончился
+			content = append(content, buf[:read]...)
+			break
+		}
+		if err != nil {
+			log.Print(err)
+			return err
+		}
+		content = append(content, buf[:read]...)
+	}
+
+	data := string(content)
+	log.Println("data:", data)
+
+	acc := strings.Split(data, "|")
+	log.Println("acc:", acc)
+
+//	var account *types.Account
+	for _, operation := range acc {
+		strAcc := strings.Split(operation, ";")
+		log.Println("strAcc:", strAcc)
+
+		id, _ := strconv.ParseInt(strAcc[0], 10, 64)
+		phone := types.Phone(strAcc[1])
+		balance, _ := strconv.ParseInt(strAcc[2], 10, 64)
+
+		account := types.Account{
+			ID:      id,
+			Phone:   phone,
+			Balance: types.Money(balance),
+		}
+		 s.accounts = append(s.accounts, &account)	
+		 log.Print(account)	
+	}
+	return nil
+}
 
 
 func (s *Service) RegisterAccount(phone types.Phone) (*types.Account, error){
@@ -76,16 +168,14 @@ func (s *Service) Deposit(accountID int64, amount types.Money) error {
 
 
 func (s *Service) FindAccountByID(accountID int64) (*types.Account,error) {
-	//var s *Service 
-	var account *types.Account
 	
-	for _, account = range s.accounts {
-		if account.ID != accountID {
-			return nil, ErrAccountNotFound
+	for _, account := range s.accounts {
+		if account.ID == accountID {
+			return account, nil
 		}
 	}
 
-	return account, nil
+	return nil, ErrAccountNotFound
 }
 
 
